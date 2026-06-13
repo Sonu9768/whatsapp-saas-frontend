@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resonate WA™ - SaaS Multi-Tenant Flow Builder</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Supabase Client CDN Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Background Orbs -->
+  <div class="decor-orb orb-1"></div>
+  <div class="decor-orb orb-2"></div>
+  <div class="decor-orb orb-3"></div>
+
+  <!-- AUTH PORTAL OVERLAY (Shown if not logged in) -->
+  <div id="auth-portal" class="auth-portal-overlay">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+          </svg>
+        </div>
+        <h2>Resonate WA™</h2>
+        <p>SaaS WhatsApp Automation Gateway</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+        <button type="button" class="google-auth-btn btn-google-login">
+          <svg viewBox="0 0 24 24" width="18" height="18" style="margin-right: 10px;">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          Continue with Google
+        </button>
+      </div>
+
+      <div class="auth-divider"><span>OR CONTINUE WITH EMAIL OTP</span></div>
+
+      <!-- OTP Email Request Form -->
+      <form id="form-otp-request" class="auth-form active" style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+        <div class="form-group">
+          <label for="otp-email">Email Address</label>
+          <input type="email" id="otp-email" required placeholder="name@company.com">
+        </div>
+        <button type="submit" id="btn-request-otp" class="auth-submit-btn">Send Verification Code (OTP)</button>
+      </form>
+
+      <!-- OTP Verify Form -->
+      <form id="form-otp-verify" class="auth-form" style="display: none; flex-direction: column; gap: 12px; margin-top: 8px;">
+        <div class="form-group">
+          <label for="otp-code">Verification Code</label>
+          <input type="text" id="otp-code" required placeholder="Enter 6-digit OTP code" autocomplete="one-time-code">
+        </div>
+        <button type="submit" id="btn-confirm-otp" class="auth-submit-btn">Verify & Sign In</button>
+        <button type="button" id="btn-back-to-otp-request" class="control-btn" style="width: 100%; border: none; background: transparent; font-size: 0.78rem;">← Change Email</button>
+      </form>
+      
+      <div class="auth-footer-note" style="margin-top: 20px;">
+        <span style="display: inline-flex; align-items: center; gap: 5px; justify-content: center; font-size: 0.72rem; color: var(--text-muted); width: 100%;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--wa-brand-light); flex-shrink: 0;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          Hosted & Managed by <strong><a href="https://kumarsonu.com.np" target="_blank" style="color: var(--wa-brand-light); text-decoration: none; border-bottom: 1px dotted var(--wa-brand-light);">Sonu Kumar</a></strong>.
+        </span>
+        <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 4px;">SaaS platform powered by Supabase & Render.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OWNER ADMIN CONSOLE MODAL -->
+  <div id="admin-portal" class="auth-portal-overlay" style="display: none;">
+    <div class="auth-card" style="max-width: 650px;">
+      <div class="auth-header">
+        <div class="logo-icon" style="background: #ef4444;">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <h2>SaaS Admin Console</h2>
+        <p>Owner Dashboard for Sonu Kumar</p>
+      </div>
+
+      <!-- Admin Panel Content -->
+      <div id="admin-panel-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">Registered App Users</h3>
+          <button class="control-btn active" id="btn-refresh-admin-users" style="font-size: 0.72rem; padding: 6px 12px; display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"></path>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            <span>Refresh Users</span>
+          </button>
+        </div>
+        <div class="scrollable" style="max-height: 350px; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow-y: auto; background: rgba(0,0,0,0.15); margin-bottom: 15px;">
+          <table class="leads-table" style="width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; min-width: 100%;">
+            <thead>
+              <tr style="background-color: var(--sim-header); border-bottom: 1px solid var(--border-color); font-weight: 700; color: var(--text-main);">
+                <th style="padding: 10px 12px;">User Email</th>
+                <th style="padding: 10px 12px;">Account Created</th>
+                <th style="padding: 10px 12px; text-align: center; width: 100px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-table-body">
+              <!-- Users loaded here -->
+            </tbody>
+          </table>
+        </div>
+        <button class="control-btn btn-danger" id="btn-exit-admin" style="width: 100%; padding: 10px;">
+          Close Admin Panel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION WORKSPACE (Hidden till Auth succeeds) -->
+  <div class="app-container" id="app-workspace" style="display: none;">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>Resonate WA™ Console</h1>
+          <p id="user-email-label">Loading account...</p>
+          <span style="font-size: 0.65rem; color: var(--wa-brand-light); font-weight: bold; display: block; margin-top: 2px;">Created by <a href="https://kumarsonu.com.np" target="_blank" style="color: inherit; text-decoration: none; border-bottom: 1px dotted var(--wa-brand-light);">Sonu Kumar</a></span>
+        </div>
+      </div>
+      
+      <!-- System Stats Bar -->
+      <div class="header-stats">
+        <div class="stat-bubble">
+          <span class="indicator active"></span>
+          <span class="label">User Session:</span>
+          <span class="value" id="sim-status">Secure</span>
+        </div>
+        <div class="stat-bubble">
+          <span class="label">Custom Steps:</span>
+          <span class="value text-primary" id="custom-steps-count">0</span>
+        </div>
+      </div>
+
+      <div class="controls-area">
+        <button id="btn-theme-toggle" class="control-btn" title="Toggle Theme">
+          <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+        <button id="btn-sound-toggle" class="control-btn active" title="Toggle Sounds">
+          <svg class="sound-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg class="sound-off" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+        <button id="btn-admin-console" class="control-btn" style="display: none; background-color: #ef4444; color: white; border-color: #ef4444; display: inline-flex; align-items: center; gap: 6px;" title="Owner Admin Console">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Admin Panel</span>
+        </button>
+        <button id="btn-logout" class="control-btn btn-danger" style="display: inline-flex; align-items: center; gap: 6px;" title="Logout">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+          </svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="workspace">
+      
+      <!-- LEFT PANEL: Dynamic Setup and Custom Flow -->
+      <section class="panel panel-left mobile-active" aria-label="SaaS Settings Panel">
+        <div class="panel-header">
+          <h2>Tenant Settings & Flow</h2>
+        </div>
+        
+        <div class="panel-content scrollable">
+          <!-- WhatsApp Token Settings Section -->
+          <div class="settings-card">
+            <div class="card-header">
+              <span class="card-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </span>
+              <h3>WhatsApp Credentials</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="conf-phone-id">Phone Number ID</label>
+                  <input type="text" id="conf-phone-id" placeholder="e.g. 109384729103847">
+                </div>
+                <div class="form-group">
+                  <label for="conf-access-token">Permanent Access Token</label>
+                  <input type="password" id="conf-access-token" placeholder="EAAGz5...">
+                </div>
+                <div class="form-group" style="display: none;">
+                  <label for="conf-verify-token">Webhook Verify Token</label>
+                  <input type="text" id="conf-verify-token" placeholder="Create a secret keyword">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gemini AI Integration Settings -->
+          <div class="settings-card">
+            <div class="card-header">
+              <span class="card-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </span>
+              <h3>Gemini AI Fallback</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <div class="form-group row-group">
+                  <label for="conf-use-gemini">Enable AI Dialog fallback</label>
+                  <input type="checkbox" id="conf-use-gemini" class="toggle-checkbox">
+                </div>
+                <div id="gemini-fields" style="display: none;" class="form-grid">
+                  <div class="form-group">
+                    <label for="conf-gemini-key">Gemini API Key</label>
+                    <input type="password" id="conf-gemini-key" placeholder="AIzaSy...">
+                  </div>
+                  <div class="form-group">
+                    <label for="conf-system-prompt">AI Bot Role Prompt</label>
+                    <textarea id="conf-system-prompt" rows="3" placeholder="Define role (e.g. You are a counselor helping Dubai seminar leads...)"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Global Metadata variables -->
+          <div class="settings-card">
+            <div class="card-header">
+              <span class="card-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+              </span>
+              <h3>Seminar Details</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="conf-meta-location">Location</label>
+                  <input type="text" id="conf-meta-location" value="Dubai">
+                </div>
+                <div class="form-group">
+                  <label for="conf-meta-date">Date</label>
+                  <input type="text" id="conf-meta-date" value="June 28">
+                </div>
+                <div class="form-group">
+                  <label for="conf-meta-time">Time</label>
+                  <input type="text" id="conf-meta-time" value="1 PM – 7 PM">
+                </div>
+                <div class="form-group">
+                  <label for="conf-meta-venue">Venue</label>
+                  <input type="text" id="conf-meta-venue" value="Grand Hyatt Hotel, Dubai">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Q&A Flow Assistant Card -->
+          <div class="settings-card">
+            <div class="card-header">
+              <span class="card-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M12 2v4M12 6a4 4 0 0 0-4 4v1h8v-1a4 4 0 0 0-4-4zM8 16h.01M16 16h.01"></path>
+                </svg>
+              </span>
+              <h3>AI Q&A Flow Assistant</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="ai-ad-details">Paste Ad Copy / Event Details</label>
+                <textarea id="ai-ad-details" rows="4" placeholder="Describe your ad details here (e.g. We are hosting an MBBS seminar in Dubai on June 28, 1 PM to 7 PM. Free registration, limited spots...)"></textarea>
+              </div>
+              <button class="control-btn active" id="btn-generate-ai-flow" style="width: 100%; margin-top: 10px; background-color: var(--wa-brand); display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <span>Auto-Generate Q&A Steps (AI)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Q&A Custom Rules Builder -->
+          <div class="settings-card">
+            <div class="card-header">
+              <span class="card-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+              </span>
+              <h3>Custom Q&A Flow Rules</h3>
+            </div>
+            <div class="card-body">
+              <div class="steps-builder-list" id="steps-builder-container">
+                <!-- User custom step items loaded here -->
+              </div>
+              <button class="control-btn active" id="btn-add-custom-step" style="width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Add New Flow Step</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Configuration save action -->
+          <button class="auth-submit-btn" id="btn-save-settings" style="margin-top: 10px; background-color: var(--wa-brand); display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span>Save Settings & Flow to Database</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- CENTER PANEL: Interactive Chat Simulator -->
+      <section class="panel panel-center" aria-label="Interactive Simulator">
+        <div class="panel-header text-center">
+          <span class="badge badge-whatsapp">Interactive Sandbox Test</span>
+        </div>
+
+        <div class="phone-wrapper">
+          <div class="phone-device">
+            <div class="phone-notch"></div>
+            <div class="phone-speaker"></div>
+            
+            <div class="phone-screen">
+              <!-- Header -->
+              <div class="wa-header">
+                <div class="wa-header-left">
+                  <div class="wa-back-arrow">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="19" y1="12" x2="5" y2="12"></line>
+                      <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                  </div>
+                  <div class="wa-avatar">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                    </svg>
+                  </div>
+                  <div class="wa-contact-info">
+                    <div class="wa-name" id="sim-contact-display">AI Testbot</div>
+                    <div class="wa-status" id="wa-bot-status">Online</div>
+                  </div>
+                </div>
+                <div class="wa-header-right" style="display: flex; align-items: center; gap: 8px;">
+                  <button id="btn-refresh-live-chat" style="background: none; border: none; padding: 4px; color: white; display: none; cursor: pointer; align-items: center;" title="Refresh Chat History">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M23 4v6h-6"></path>
+                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                  </button>
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-2.2 2.2a15.045 15.045 0 0 1-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4.01c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg>
+                </div>
+              </div>
+              
+              <!-- Mode Switcher (Local Sandbox vs Live Chat) -->
+              <div class="sim-mode-switcher">
+                <button type="button" class="sim-mode-btn active" id="btn-mode-sandbox">
+                  <span class="dot sandbox-dot"></span>
+                  Sandbox Mode
+                </button>
+                <button type="button" class="sim-mode-btn" id="btn-mode-live">
+                  <span class="dot live-dot"></span>
+                  Live Chat Mode
+                </button>
+              </div>
+
+              <!-- Message Stream -->
+              <div class="wa-chat-container" id="chat-messages">
+                <!-- Messages populated via simulator -->
+              </div>
+
+              <div class="typing-indicator-wrapper" id="typing-indicator">
+                <div class="typing-bubble">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+              </div>
+
+              <!-- Simulator suggestion buttons -->
+              <div class="wa-suggestions" id="keyboard-suggestions">
+                <!-- suggestions populated based on rules step triggers -->
+              </div>
+
+              <!-- Form input -->
+              <form class="wa-input-area" id="chat-input-form">
+                <div class="input-actions-left">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 10h3l-4 4-4-4h3V8h2v4z"/></svg>
+                </div>
+                <div class="input-field-wrapper">
+                  <input type="text" id="wa-text-input" placeholder="Test typing custom replies..." autocomplete="off">
+                </div>
+                <button type="submit" class="send-btn" id="wa-send-btn">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <button class="control-btn btn-danger" id="btn-restart-simulator" style="margin-top: 15px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 4v6h-6"></path>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Restart Simulation Flow</span>
+        </button>
+      </section>
+
+      <section class="panel panel-right" aria-label="Webhook Configuration">
+        <div class="panel-header">
+          <nav class="hub-tabs">
+            <button class="tab-link active" data-tab="leads-list" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span>Leads Log</span>
+            </button>
+            <button class="tab-link" data-tab="webhook-setup" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              <span>Live Webhook</span>
+            </button>
+          </nav>
+        </div>
+
+        <div class="panel-content tab-panel-wrapper scrollable">
+          <!-- Leads List Tab -->
+          <div class="tab-content active" id="tab-leads-list">
+            <div class="funnel-container">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3>Registered Lead Contacts</h3>
+                <button class="control-btn active" id="btn-download-leads-csv" style="font-size: 0.75rem; padding: 6px 12px; background-color: var(--wa-brand); display: flex; align-items: center; gap: 6px;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span>Download CSV</span>
+                </button>
+              </div>
+              <p class="tab-subtitle">Real-time captured WhatsApp lead logs and qualification steps</p>
+              
+              <div style="max-height: 400px; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow-y: auto; overflow-x: auto; background: rgba(0,0,0,0.15);">
+                <table class="leads-table" style="width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; min-width: 100%;">
+                  <thead>
+                    <tr style="background-color: var(--sim-header); border-bottom: 1px solid var(--border-color); font-weight: 700; color: var(--text-main);">
+                      <th style="padding: 10px 12px;">Phone Number</th>
+                      <th style="padding: 10px 12px;">Profile Name</th>
+                      <th style="padding: 10px 12px;">Current Step</th>
+                      <th style="padding: 10px 12px;">Last Active</th>
+                    </tr>
+                  </thead>
+                  <tbody id="leads-table-body">
+                    <!-- Dynamic lead rows loaded here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Webhook URL tab -->
+          <div class="tab-content" id="tab-webhook-setup">
+            <div class="funnel-container">
+              <h3>Your Dedicated Meta Webhook URL</h3>
+              <p class="tab-subtitle">Copy this URL and paste it into Meta Developer Dashboard</p>
+              
+              <div class="webhook-url-copy-box">
+                <input type="text" id="live-webhook-url-display" readonly value="https://whatsapp-saas-webhook.onrender.com/webhook/login-to-get-url">
+                <button id="btn-copy-webhook-url">Copy</button>
+              </div>
+
+              <div style="margin-top: 20px;">
+                <h4>Setup Guide in 3 Steps:</h4>
+                <ol style="margin-left: 20px; font-size: 0.82rem; line-height: 1.6; color: var(--text-muted); margin-top: 8px;">
+                  <li>Create a Meta Developer account at developers.facebook.com</li>
+                  <li>Go to App Settings ➔ Webhooks ➔ Select "WhatsApp Business Account"</li>
+                  <li>Click **Subscribe** and paste the live webhook URL above along with your secret verify token. Subscribe to the `messages` event.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Audio -->
+  <audio id="sound-outgoing" src="https://assets.mixkit.co/active_storage/sfx/2357/2357-84.wav" preload="auto"></audio>
+  <audio id="sound-incoming" src="https://assets.mixkit.co/active_storage/sfx/1657/1657-84.wav" preload="auto"></audio>
+  <audio id="sound-typing" src="https://assets.mixkit.co/active_storage/sfx/1650/1650-84.wav" preload="auto"></audio>
+
+  <!-- Floating Bottom Mobile Navigation Bar -->
+  <div class="mobile-tab-nav" id="mobile-navigation-bar">
+    <button class="mobile-tab-btn active" data-target="panel-left">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      <span>Settings</span>
+    </button>
+    <button class="mobile-tab-btn" data-target="panel-center">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+      </svg>
+      <span>Sandbox</span>
+    </button>
+    <button class="mobile-tab-btn" data-target="panel-right">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      <span>Leads</span>
+    </button>
+  </div>
+
+  <!-- Custom Confirm Dialog Modal -->
+  <div id="custom-confirm-modal" class="auth-portal-overlay" style="display: none; z-index: 2000;">
+    <div class="auth-card" style="max-width: 420px; padding: 28px; text-align: center;">
+      <div class="auth-header" style="margin-bottom: 16px;">
+        <div class="logo-icon" style="background: #ef4444; margin-bottom: 8px;" id="confirm-modal-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: white;">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h2 id="confirm-modal-title" style="font-size: 1.15rem; font-weight: 800;">Confirm Action</h2>
+        <p id="confirm-modal-message" style="margin-top: 10px; line-height: 1.5; font-size: 0.8rem; color: var(--text-muted);"></p>
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 24px; position: relative; z-index: 1;">
+        <button id="btn-confirm-cancel" class="control-btn" style="flex: 1; padding: 10px;">Cancel</button>
+        <button id="btn-confirm-proceed" class="auth-submit-btn" style="flex: 1; padding: 10px; background: #ef4444; border-color: #ef4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div id="toast-container" style="position: fixed; top: 24px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 3000; pointer-events: none;"></div>
+
+  <!-- JS Controller -->
+  <script src="app.js"></script>
+</body>
+</html>
